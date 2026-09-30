@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>MinerU 解析速度</title>
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header>
+    <div>
+      <p class="eyebrow">MinerU queue</p>
+      <h1>解析速度</h1>
+    </div>
+    <p id="clock" class="clock">正在连接</p>
+  </header>
+
+  <p id="banner" class="banner" hidden></p>
+
+  <section class="overview">
+    <div class="headline-metric">
+      <p class="eyebrow">总完成量 · 当前任务表</p>
+      <div class="headline-value"><strong id="completed-count">—</strong><span>篇已成功</span></div>
+      <div>
+        <p id="completed-detail" class="metric-detail">读取中</p>
+        <div class="completion-track" role="progressbar" aria-label="任务完成进度" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="completion-fill"></div></div>
+      </div>
+    </div>
+    <div class="rolling-metric">
+      <p class="eyebrow">实际吞吐 · 滚动 60 分钟</p>
+      <div class="rolling-value"><strong id="rolling-count">—</strong><span>篇成功</span></div>
+      <p id="rolling-comparison" class="metric-detail">读取中</p>
+    </div>
+    <div class="cards" id="cards"></div>
+  </section>
+
+  <section class="panel">
+    <h2>完成走势</h2>
+    <div class="toolbar">
+      <div class="views" role="tablist">
+        <button type="button" id="view-day" class="active">当天每小时</button>
+        <button type="button" id="view-hour">某小时每 5 分钟</button>
+      </div>
+      <label>日期 <input id="date" type="date"></label>
+      <label id="hour-label">小时
+        <select id="hour"></select>
+      </label>
+      <button type="button" id="refresh">刷新</button>
+    </div>
+    <div id="window-speed" class="window-speed"></div>
+    <canvas id="chart" width="960" height="280"></canvas>
+    <div class="legend">
+      <span><i class="swatch success"></i>成功</span>
+      <span><i class="swatch failed"></i>失败</span>
+      <span><i class="swatch other"></i>其他</span>
+    </div>
+    <div class="table-wrap">
+      <table id="buckets"></table>
+    </div>
+  </section>
+
+  <details class="panel notes">
+    <summary>统计口径与状态说明</summary>
+    <p>页面每分钟刷新。总完成量按当前任务表中每篇任务的最新状态统计，同一篇重跑成功只计一次。吞吐按任务完成时间统计实际成功篇数，重跑成功会再次计入。滚动 60 分钟与整点小时是不同时间范围。单篇平均耗时从开始处理算到 zip 下载完成，缺少开始时间的旧记录仍计入成功篇数。</p>
+    <p>进度文件只追加，一行是 <code>任务主键 &nbsp; 状态 &nbsp; 下载完成时间 &nbsp; 开始时间</code>。旧行可以只有前三列。MinerU 还在 <code>queued</code> 或 <code>running</code> 时不会写这一行。</p>
+    <ul>
+      <li><b>success</b>：任务 <code>completed</code>，zip 已下载并解压。</li>
+      <li><b>failed</b>：MinerU 返回 <code>failed</code>，或 PDF 缺失、上传、协议、下载、解压出错。</li>
+      <li><b>partial</b>：MinerU 返回 <code>partial</code>。已尽量保存产物，记入「其他」，重跑时会再次执行。</li>
+      <li><b>canceled</b>：MinerU 返回 <code>canceled</code>。记入「其他」。</li>
+      <li><b>timeout</b>：轮询次数用尽。远端任务不会被取消，记入「其他」，重跑会重新提交。</li>
+    </ul>
+  </details>
+
+  <script src="config.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,55 @@
+# 复制为 config.toml 后按服务器实际情况修改。
+# 相对路径相对于本配置文件所在目录。
+
+# build_mineru_queue 生成的任务表。
+tasks_csv = "/path/to/mineru_tasks.csv"
+
+# 解析结果根目录。每个任务写到 {output_root}/{output_rel_dir}/
+output_root = "/path/to/mineru_output"
+
+# 只追加、不修改的进度文件。可省略，默认是 {output_root}/progress.txt
+progress_log = "/path/to/mineru_output/progress.txt"
+
+# PDF 字节缓存，避免每次启动都 stat 十几万个文件。可省略。
+size_cache = "/path/to/mineru_output/pdf_sizes.tsv"
+
+# MinerU 解析档位和要回传的格式。zip 必须保留，结果目录里会保存并解压它。
+tier = "standard"
+output_formats = ["markdown", "middle_json", "structured_content", "zip"]
+# 部署 scripts/install_mineru_gc.py 的服务端补丁并重启全部端口后改为 true。
+release_remote_jobs = false
+
+# 轮询 GET /v1/parse/jobs/<job_id> 的间隔和次数上限。
+# 超过次数记为 timeout；启用 release_remote_jobs 后会取消并回收远端任务。
+poll_interval_seconds = 3
+max_polls = 1200
+request_timeout_seconds = 60
+transfer_timeout_seconds = 600
+
+# 全局普遍并发和最高并发。某个服务写了自己的 target / max 时，以服务自己的值为准。
+[concurrency]
+target = 6
+max = 8
+
+# 进度页面和 API 都在这个端口。笔记本打开 http://服务器IP:端口/
+[monitor]
+host = "0.0.0.0"
+port = 8765
+
+# 服务数量不限。name 只用于日志和调度稳定性。
+# api_key 省略或留空表示不带 Authorization。
+[[services]]
+name = "h100-1"
+base_url = "http://10.0.0.11:8000"
+
+[[services]]
+name = "h100-2"
+base_url = "http://10.0.0.12:8000"
+
+# A100 单独把最高并发压到 4。它达到 4 后不再接任务，也不再参与字节差计算。
+[[services]]
+name = "a100-1"
+base_url = "http://10.0.0.21:8000"
+api_key = ""
+target = 2
+max = 4
